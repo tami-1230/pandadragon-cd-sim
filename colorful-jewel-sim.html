@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>特典会CD枚数シミュレーター｜Colorful Jewel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FCFBFE; --surface:#FFFFFF; --ink:#2A2440; --muted:#6E6880; --line:#E8E4F0;
+  --green:#2FAE66; --aqua:#22AACF; --pink:#E8609F; --purple:#8A5BD8; --red:#E0474C; --blue:#3566D6; --yellow:#F0B400;
+  --total-bg:#2A2440; --total-ink:#FFFFFF;
+  color-scheme:light;
+  --solo:var(--purple); --normal:var(--blue); --focus:var(--pink);
+  --solo-soft:color-mix(in srgb, var(--solo) 14%, var(--surface));
+  --normal-soft:color-mix(in srgb, var(--normal) 14%, var(--surface));
+  --rainbow:linear-gradient(90deg, var(--green) 0 14.29%, var(--aqua) 14.29% 28.57%, var(--pink) 28.57% 42.86%, var(--purple) 42.86% 57.14%, var(--red) 57.14% 71.43%, var(--blue) 71.43% 85.71%, var(--yellow) 85.71% 100%);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16131F; --surface:#211C2D; --ink:#F2EFFA; --muted:#A8A1BA; --line:#383048;
+    --green:#5CD18E; --aqua:#5FD0EC; --pink:#F59AC6; --purple:#B194F2; --red:#F27477; --blue:#7C9DF2; --yellow:#F7CE45;
+    --total-bg:#F2EFFA; --total-ink:#16131F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16131F; --surface:#211C2D; --ink:#F2EFFA; --muted:#A8A1BA; --line:#383048;
+  --green:#5CD18E; --aqua:#5FD0EC; --pink:#F59AC6; --purple:#B194F2; --red:#F27477; --blue:#7C9DF2; --yellow:#F7CE45;
+  --total-bg:#F2EFFA; --total-ink:#16131F;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  line-height:1.6; -webkit-text-size-adjust:100%;
+}
+main{max-width:34rem; margin:0 auto; padding:1.5rem 1rem 3rem}
+h1{font-size:1.6rem; font-weight:800; line-height:1.3; margin:0 0 .6rem; letter-spacing:.01em}
+h1::after{content:""; display:block; height:6px; width:7rem; margin-top:.5rem; border-radius:3px; background:var(--rainbow)}
+.event{color:var(--muted); font-size:.85rem; margin:0}
+.prices{display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0 1.5rem; padding:0; list-style:none}
+.prices li{display:flex; align-items:center; gap:.4rem; font-size:.85rem; font-weight:700; padding:.3rem .7rem .3rem .4rem; border-radius:999px}
+.prices .s{background:var(--solo-soft); color:var(--solo)}
+.prices .n{background:var(--normal-soft); color:var(--normal)}
+
+.disc{display:inline-block; width:1.15rem; height:1.15rem; border-radius:50%; flex:none; position:relative;
+  background:radial-gradient(circle at 50% 50%, var(--surface) 0 18%, transparent 19%), conic-gradient(from 30deg, currentColor, color-mix(in srgb, currentColor 55%, #fff) 25%, currentColor 50%, color-mix(in srgb, currentColor 70%, #fff) 75%, currentColor);}
+
+.tickets{list-style:none; margin:0; padding:0; border-top:1px solid var(--line)}
+.ticket{display:grid; grid-template-columns:1fr auto; gap:.25rem 1rem; align-items:center; padding:1rem .25rem 1rem .85rem; border-bottom:1px solid var(--line); border-left:5px solid var(--c, var(--line))}
+.ticket h2{font-size:1rem; font-weight:700; margin:0; line-height:1.4}
+.ticket h2 small{font-weight:400; color:var(--muted); font-size:.75rem; margin-left:.3rem}
+.meta{grid-column:1; display:flex; flex-wrap:wrap; gap:.35rem .6rem; align-items:center; font-size:.75rem; color:var(--muted)}
+.need{display:inline-flex; gap:.25rem; align-items:center}
+.tag{font-weight:700; padding:.05rem .45rem; border-radius:.35rem; font-size:.72rem}
+.tag.s{background:var(--solo-soft); color:var(--solo)}
+.tag.n{background:var(--normal-soft); color:var(--normal)}
+.stepper{grid-column:2; grid-row:1 / span 2; display:flex; align-items:center; gap:.15rem}
+.stepper button{
+  width:2.6rem; height:2.6rem; border-radius:50%; border:1.5px solid var(--line); background:var(--surface);
+  color:var(--ink); font:inherit; font-size:1.3rem; font-weight:700; line-height:1; cursor:pointer;
+  display:grid; place-items:center; touch-action:manipulation;
+}
+.stepper button:hover:not(:disabled){border-color:var(--ink)}
+.stepper button:disabled{opacity:.3; cursor:default}
+.stepper output{min-width:2.4rem; text-align:center; font-size:1.4rem; font-weight:800; font-variant-numeric:tabular-nums}
+button:focus-visible,a:focus-visible{outline:3px solid var(--focus); outline-offset:2px}
+
+.result{margin-top:1.75rem; background:var(--surface); border:1px solid var(--line); border-radius:1.25rem; padding:1.25rem}
+.row{display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:.6rem 0}
+.row + .row{border-top:1px dashed var(--line)}
+.row .label{font-weight:700; white-space:nowrap}
+.row .label .count{font-size:1.5rem; font-weight:800; font-variant-numeric:tabular-nums; margin-left:.3rem}
+.row.s .label{color:var(--solo)} .row.n .label{color:var(--normal)}
+.row .sub{display:block; font-size:.75rem; font-weight:400; color:var(--muted)}
+.discs{display:flex; flex-wrap:wrap; gap:.3rem; justify-content:flex-end; max-width:11rem; padding-top:.35rem}
+.row.s .discs{color:var(--solo)} .row.n .discs{color:var(--normal)}
+.discs .disc{animation:pop .22s ease-out}
+.discs .none{font-size:.8rem; color:var(--muted)}
+@keyframes pop{from{transform:scale(.4); opacity:0}to{transform:scale(1); opacity:1}}
+@media (prefers-reduced-motion: reduce){.discs .disc{animation:none}}
+
+.total{position:relative; overflow:hidden; margin-top:.75rem; background:var(--total-bg); color:var(--total-ink); border-radius:.9rem; padding:1.25rem 1.1rem 1rem; display:flex; align-items:baseline; justify-content:space-between; gap:1rem}
+.total::before{content:""; position:absolute; inset:0 0 auto; height:6px; background:var(--rainbow)}
+.total span{font-size:.9rem; font-weight:700}
+.total strong{font-size:2rem; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.01em}
+.total strong small{font-size:1rem; margin-left:.15rem}
+
+.actions{display:flex; gap:.5rem; margin-top:1rem; flex-wrap:wrap}
+.actions a,.actions button{flex:1 1 9rem; text-align:center; text-decoration:none; font:inherit; font-weight:700; font-size:.9rem; padding:.75rem 1rem; border-radius:999px; cursor:pointer}
+.post{background:#D63A40; color:#FFFFFF; border:0}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line)}
+.ghost:hover{border-color:var(--ink)}
+.status{min-height:1.2rem; font-size:.8rem; color:var(--muted); margin:.5rem 0 0; text-align:center}
+
+.notes{margin-top:2rem; font-size:.78rem; color:var(--muted); line-height:1.7}
+.notes h3{font-size:.85rem; color:var(--ink); margin:0 0 .3rem}
+.notes ul{margin:0; padding-left:1.1rem}
+.notes a{color:var(--blue)}
+@media (max-width:360px){ h1{font-size:1.35rem} .stepper button{width:2.3rem; height:2.3rem} }
+</style>
+</head>
+<body>
+<main>
+  <h1>特典会 CD枚数シミュレーター</h1>
+  <p class="event">PANDA DRAGON BEST ALBUM 〜Colorful Jewel〜 発売記念ミニライブ＆特典会</p>
+
+  <ul class="prices" aria-label="価格">
+    <li class="s"><span class="disc" aria-hidden="true"></span>ソロ盤 2,400円</li>
+    <li class="n"><span class="disc" aria-hidden="true"></span>通常盤 3,600円</li>
+  </ul>
+
+  <ul class="tickets" id="tickets"></ul>
+
+  <section class="result" aria-live="polite">
+    <div class="row s">
+      <div class="label">ソロ盤<span class="count" id="soloCount">0</span>枚<span class="sub" id="soloYen">0円</span></div>
+      <div class="discs" id="soloDiscs"></div>
+    </div>
+    <div class="row n">
+      <div class="label">通常盤<span class="count" id="normalCount">0</span>枚<span class="sub" id="normalYen">0円</span></div>
+      <div class="discs" id="normalDiscs"></div>
+    </div>
+    <div class="total"><span>合計（税込）</span><strong id="total">0<small>円</small></strong></div>
+
+    <div class="actions">
+      <a class="post" id="post" href="#" target="_blank" rel="noopener">結果をXでポスト</a>
+      <button class="ghost" id="copy" type="button">結果をコピー</button>
+      <button class="ghost" id="reset" type="button">リセット</button>
+    </div>
+    <p class="status" id="status"></p>
+  </section>
+
+  <section class="notes">
+    <h3>計算の前提</h3>
+    <ul>
+      <li>CD1枚（グループショット券は通常盤＋ソロ盤の2枚）につき特典券1枚として計算しています。</li>
+      <li>ソロ盤は購入時にメンバー（たいが・なぎ・なるき・ぱっち・ようた）を選べます。</li>
+      <li>お見送り会参加券は1会計10枚まで、個別ハイタッチお話し券はメンバー問わず1日合計5枚まで、優先入場券・グループショット券は1枚までです。</li>
+      <li>特典券は先着・数量限定です。最新情報は<a href="https://pandadragon.jp/archives/7988" target="_blank" rel="noopener">公式サイト</a>で確認してください。</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+const SOLO = 2400, NORMAL = 3600;
+const items = [
+  {id:'priority', name:'優先入場券', max:1, solo:1, normal:0, limit:'1枚まで', c:'var(--green)'},
+  {id:'miokuri',  name:'お見送り会参加券', sub:'動画撮影可', max:10, solo:1, normal:0, limit:'1会計10枚まで', c:'var(--pink)'},
+  {id:'hightouch',name:'個別ハイタッチお話し券', max:5, solo:0, normal:1, limit:'合計5枚まで', c:'var(--aqua)'},
+  {id:'group',    name:'グループショット券', sub:'ファミリアショット可', max:1, solo:1, normal:1, limit:'1日1枚まで', c:'var(--yellow)'}
+];
+const state = Object.fromEntries(items.map(i => [i.id, 0]));
+const yen = n => n.toLocaleString('ja-JP');
+
+const list = document.getElementById('tickets');
+items.forEach(it => {
+  const li = document.createElement('li');
+  li.className = 'ticket';
+  li.style.setProperty('--c', it.c);
+  const need = [];
+  if (it.solo) need.push('<span class="tag s">ソロ盤' + it.solo + '</span>');
+  if (it.normal) need.push('<span class="tag n">通常盤' + it.normal + '</span>');
+  li.innerHTML =
+    '<h2>' + it.name + (it.sub ? '<small>' + it.sub + '</small>' : '') + '</h2>' +
+    '<div class="meta"><span class="need">' + need.join('＋') + '</span><span>' + it.limit + '</span></div>' +
+    '<div class="stepper">' +
+      '<button type="button" data-id="' + it.id + '" data-d="-1" aria-label="' + it.name + 'を1枚減らす">−</button>' +
+      '<output id="v-' + it.id + '" aria-label="' + it.name + 'の枚数">0</output>' +
+      '<button type="button" data-id="' + it.id + '" data-d="1" aria-label="' + it.name + 'を1枚増やす">＋</button>' +
+    '</div>';
+  list.appendChild(li);
+});
+
+list.addEventListener('click', e => {
+  const b = e.target.closest('button[data-id]');
+  if (!b) return;
+  const it = items.find(i => i.id === b.dataset.id);
+  state[it.id] = Math.min(it.max, Math.max(0, state[it.id] + Number(b.dataset.d)));
+  render();
+});
+
+function discs(el, n) {
+  const prev = el.querySelectorAll('.disc').length;
+  if (n === 0) { el.innerHTML = '<span class="none">なし</span>'; return; }
+  if (prev === 0) el.innerHTML = '';
+  while (el.querySelectorAll('.disc').length < n) {
+    const d = document.createElement('span'); d.className = 'disc'; d.setAttribute('aria-hidden','true'); el.appendChild(d);
+  }
+  while (el.querySelectorAll('.disc').length > n) el.lastElementChild.remove();
+}
+
+function summary(solo, normal, total) {
+  const lines = items.filter(i => state[i.id] > 0).map(i => i.name + ' ' + state[i.id] + '枚');
+  return 'PANDA DRAGON BEST ALBUM 〜Colorful Jewel〜 発売記念ミニライブ＆特典会\n' +
+    (lines.length ? lines.join('\n') : '（未選択）') +
+    '\n→ ソロ盤' + solo + '枚＋通常盤' + normal + '枚＝' + yen(total) + '円';
+}
+
+function render() {
+  let solo = 0, normal = 0;
+  items.forEach(it => {
+    solo += it.solo * state[it.id];
+    normal += it.normal * state[it.id];
+    document.getElementById('v-' + it.id).textContent = state[it.id];
+    list.querySelector('[data-id="' + it.id + '"][data-d="-1"]').disabled = state[it.id] <= 0;
+    list.querySelector('[data-id="' + it.id + '"][data-d="1"]').disabled = state[it.id] >= it.max;
+  });
+  const total = solo * SOLO + normal * NORMAL;
+  document.getElementById('soloCount').textContent = solo;
+  document.getElementById('normalCount').textContent = normal;
+  document.getElementById('soloYen').textContent = yen(solo * SOLO) + '円';
+  document.getElementById('normalYen').textContent = yen(normal * NORMAL) + '円';
+  document.getElementById('total').innerHTML = yen(total) + '<small>円</small>';
+  discs(document.getElementById('soloDiscs'), solo);
+  discs(document.getElementById('normalDiscs'), normal);
+  document.getElementById('post').href = 'https://x.com/intent/post?text=' + encodeURIComponent(summary(solo, normal, total));
+  window.__summary = summary(solo, normal, total);
+}
+
+const status = document.getElementById('status');
+document.getElementById('copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(window.__summary);
+    status.textContent = '結果をコピーしました';
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = window.__summary; document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (_) {}
+    ta.remove();
+    status.textContent = ok ? '結果をコピーしました' : 'コピーできませんでした。画面を長押ししてコピーしてください';
+  }
+  setTimeout(() => status.textContent = '', 2500);
+});
+document.getElementById('reset').addEventListener('click', () => {
+  items.forEach(i => state[i.id] = 0); render();
+  status.textContent = 'リセットしました'; setTimeout(() => status.textContent = '', 2000);
+});
+
+render();
+</script>
+</body>
+</html>
