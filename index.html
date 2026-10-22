@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>特典会CD枚数シミュレーター｜Colorful Jewel</title>
+<meta name="description" content="PANDA DRAGON BEST ALBUM 〜Colorful Jewel〜 発売記念ミニライブ＆特典会。参加したい特典券の回数を選ぶと、ソロ盤・通常盤の必要枚数と合計金額がわかります。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tami-1230.github.io/pandadragon-cd-sim/">
+<meta property="og:title" content="特典会CD枚数シミュレーター｜Colorful Jewel">
+<meta property="og:description" content="参加したい特典券の回数を選ぶと、ソロ盤・通常盤の必要枚数と合計金額がわかります。">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
@@ -222,7 +228,7 @@ function render() {
   document.getElementById('total').innerHTML = yen(total) + '<small>円</small>';
   discs(document.getElementById('soloDiscs'), solo);
   discs(document.getElementById('normalDiscs'), normal);
-  document.getElementById('post').href = 'https://x.com/intent/post?text=' + encodeURIComponent(summary(solo, normal, total));
+  document.getElementById('post').href = 'https://x.com/intent/post?text=' + encodeURIComponent(summary(solo, normal, total)) + '&url=' + encodeURIComponent('https://tami-1230.github.io/pandadragon-cd-sim/');
   window.__summary = summary(solo, normal, total);
 }
 
