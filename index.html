@@ -140,8 +140,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--focus); outline-off
     <div class="total"><span>合計（税込）</span><strong id="total">0<small>円</small></strong></div>
 
     <div class="actions">
-      <button class="img" id="shareImg" type="button">結果を画像で共有</button>
-      <a class="post" id="post" href="#" target="_blank" rel="noopener">結果をXでポスト</a>
+      <button class="post" id="post" type="button">結果をXでポスト</button>
       <button class="ghost" id="copy" type="button">結果をコピー</button>
       <button class="ghost" id="reset" type="button">リセット</button>
     </div>
@@ -231,8 +230,8 @@ function render() {
   document.getElementById('total').innerHTML = yen(total) + '<small>円</small>';
   discs(document.getElementById('soloDiscs'), solo);
   discs(document.getElementById('normalDiscs'), normal);
-  document.getElementById('post').href = 'https://x.com/intent/post?text=' + encodeURIComponent(summary(solo, normal, total)) + '&url=' + encodeURIComponent('https://tami-1230.github.io/pandadragon-cd-sim/');
   window.__summary = summary(solo, normal, total);
+  scheduleImage();
 }
 
 const status = document.getElementById('status');
@@ -355,31 +354,61 @@ async function drawImage() {
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png'));
 }
 
-document.getElementById('shareImg').addEventListener('click', async () => {
-  const btn = document.getElementById('shareImg');
-  btn.disabled = true; status.textContent = '画像を作成しています';
-  try {
-    const blob = await drawImage();
-    const file = new File([blob], 'colorful-jewel-sim.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      status.textContent = '';
-      try {
-        await navigator.share({ files: [file], text: window.__summary + '\n' + SITE });
-      } catch (e) {
-        if (e.name !== 'AbortError') throw e;
-      }
-    } else {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob); a.download = 'colorful-jewel-sim.png';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      status.textContent = '画像を保存しました。Xの投稿画面で添付してください';
-      setTimeout(() => status.textContent = '', 4000);
+// 選択が変わるたびに画像を作り直しておく（押した瞬間に共有できるように）
+let imgBlob = null, imgTimer = null, imgToken = 0;
+function scheduleImage() {
+  imgBlob = null;
+  clearTimeout(imgTimer);
+  const token = ++imgToken;
+  imgTimer = setTimeout(async () => {
+    try { const b = await drawImage(); if (token === imgToken) imgBlob = b; } catch (e) {}
+  }, 150);
+}
+
+function saveImage(blob) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'colorful-jewel-sim.png';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function say(msg, ms) {
+  status.textContent = msg;
+  if (ms) setTimeout(() => { if (status.textContent === msg) status.textContent = ''; }, ms);
+}
+
+document.getElementById('post').addEventListener('click', async () => {
+  const text = window.__summary;
+  const intent = 'https://x.com/intent/post?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(SITE);
+  const blob = imgBlob;
+  const file = blob ? new File([blob], 'colorful-jewel-sim.png', { type: 'image/png' }) : null;
+  const isPhone = window.matchMedia('(pointer: coarse)').matches;
+
+  // スマホ：共有シートから X を選ぶと、画像と文面が入った投稿画面が開く
+  if (isPhone && file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], text: text + '\n' + SITE });
+    } catch (e) {
+      if (e.name !== 'AbortError') { saveImage(blob); window.open(intent, '_blank'); }
     }
-  } catch (e) {
-    status.textContent = '画像を作成できませんでした。もう一度お試しください';
-  } finally {
-    btn.disabled = false;
+    return;
+  }
+
+  // PC：画像をクリップボードにコピーしてから、文面入りの投稿画面を開く
+  let copied = null;
+  if (blob && navigator.clipboard && window.ClipboardItem) {
+    try { copied = navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); } catch (e) { copied = null; }
+  }
+  window.open(intent, '_blank');
+  if (copied) {
+    try {
+      await copied;
+      say('画像をコピーしました。投稿画面で貼り付け（Ctrl+V / ⌘V）してください', 8000);
+      return;
+    } catch (e) {}
+  }
+  if (blob) {
+    saveImage(blob);
+    say('画像を保存しました。投稿画面で添付してください', 8000);
   }
 });
 
